@@ -617,8 +617,19 @@ namespace OpenRA
 		// - things that depend on a particular world should be queuing them on the world actor.
 		static volatile ActionQueue delayedActions = new();
 
-		public static void RunAfterTick(Action a) { delayedActions.Add(a, RunTime); }
-		public static void RunAfterDelay(int delayMilliseconds, Action a) { delayedActions.Add(a, RunTime + delayMilliseconds); }
+        // Note: Multi-session mode never drains this queue
+        // - queued actions stay forever leaking their world
+		public static void RunAfterTick(Action a)
+        {
+            if (!IsMultiSession)
+                delayedActions.Add(a, RunTime);
+        }
+
+        public static void RunAfterDelay(int delayMilliseconds, Action a)
+        {
+            if (!IsMultiSession)
+                delayedActions.Add(a, RunTime + delayMilliseconds);
+        }
 
 		static void TakeScreenshotInner()
 		{
